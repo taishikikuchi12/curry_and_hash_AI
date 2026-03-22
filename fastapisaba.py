@@ -6,6 +6,8 @@ import torch.nn as nn
 from torchvision import models, transforms
 from torchvision.models import EfficientNet_V2_S_Weights
 import io
+from pathlib import Path
+import uvicorn
 
 app = FastAPI()
 
@@ -18,7 +20,8 @@ app.add_middleware(
 )
 
 # ===== モデル読み込み =====
-CLASS_NAMES_PATH = "class_names.txt"
+BASE_DIR = Path(__file__).resolve().parent
+CLASS_NAMES_PATH = BASE_DIR / "class_names.txt"
 
 
 def load_class_names(path: str):
@@ -43,7 +46,7 @@ elif torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-model_path = "best_efficientnetv2.pth"
+model_path = BASE_DIR / "best_efficientnetv2.pth"
 
 weights = EfficientNet_V2_S_Weights.DEFAULT
 model = models.efficientnet_v2_s(weights=weights)
@@ -85,3 +88,6 @@ async def predict(file: UploadFile = File(...)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    uvicorn.run("fastapisaba:app", host="127.0.0.1", port=8000, reload=True)
